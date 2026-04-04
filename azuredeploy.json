@@ -4,7 +4,7 @@
   "parameters": {
     "FunctionName": {
       "type": "string",
-      "defaultValue": "ciscoUmbrellaDataConn",
+      "defaultValue": "ciscoUmbrellaSecEng",
       "metadata": {
         "description": "Name of the Azure Function App"
       }
