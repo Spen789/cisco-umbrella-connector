@@ -67,7 +67,7 @@
     "StorageSuffix": "[environment().suffixes.storage]",
     "HostingPlanName": "[concat('plan-', variables('FunctionName'))]",
     "AppInsightsName": "[concat('ai-', variables('FunctionName'))]",
-    "PackageUri": "https://raw.githubusercontent.com/Spen789/Azure-Sentinel/master/Solutions/CiscoUmbrella/Data%20Connectors/CiscoUmbrellaConn.zip"
+    "PackageUri": "https://raw.githubusercontent.com/Spen789/cisco-umbrella-connector/main/CiscoUmbrellaConn.zip"
   },
   "resources": [
     {
@@ -183,11 +183,7 @@
             },
             {
               "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "1"
-            },
-            {
-              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-              "value": "true"
+              "value": "[variables('PackageUri')]"
             }
           ]
         }
