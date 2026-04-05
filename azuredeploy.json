@@ -4,9 +4,9 @@
   "parameters": {
     "FunctionName": {
       "type": "string",
-      "defaultValue": "CiscoUmbrellaSecEng",
+      "defaultValue": "secengciscoumb",
       "minLength": 1,
-      "maxLength": 30,
+      "maxLength": 11,
       "metadata": {
         "description": "Name of the Azure Function App"
       }
