@@ -67,7 +67,8 @@
     "StorageSuffix": "[environment().suffixes.storage]",
     "HostingPlanName": "[concat('plan-', variables('FunctionName'))]",
     "AppInsightsName": "[concat('ai-', variables('FunctionName'))]",
-    "PackageUri": "https://raw.githubusercontent.com/Spen789/cisco-umbrella-connector/main/CiscoUmbrellaConn.zip"
+    "GitHubRepoUrl": "https://github.com/Spen789/cisco-umbrella-connector.git",
+    "GitHubBranch": "main"
   },
   "resources": [
     {
@@ -182,11 +183,28 @@
               "value": "[parameters('logAnalyticsUri')]"
             },
             {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "[variables('PackageUri')]"
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "1"
+            },
+            {
+              "name": "ENABLE_ORYX_BUILD",
+              "value": "true"
             }
           ]
         }
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/sourcecontrols",
+      "apiVersion": "2023-01-01",
+      "name": "[concat(variables('FunctionName'), '/web')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('FunctionName'))]"
+      ],
+      "properties": {
+        "repoUrl": "[variables('GitHubRepoUrl')]",
+        "branch": "[variables('GitHubBranch')]",
+        "isManualIntegration": true
       }
     }
   ],
