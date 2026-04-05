@@ -4,7 +4,7 @@
   "parameters": {
     "FunctionName": {
       "type": "string",
-      "defaultValue": "secengciscoumb",
+      "defaultValue": "secengumb",
       "minLength": 1,
       "maxLength": 11,
       "metadata": {
