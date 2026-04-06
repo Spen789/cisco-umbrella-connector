@@ -342,6 +342,7 @@ class UmbrellaClient:
         return date_string
 
     def parse_csv_ip(self, csv_file):
+        # IP log schema: Base fields (row[0]-row[6]) — Timestamp through Categories
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -362,6 +363,7 @@ class UmbrellaClient:
                 yield event
                 
     def parse_csv_dlp(self, csv_file):
+        # DLP log schema: Base fields (row[0]-row[24]) — Timestamp through Organization ID
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -401,11 +403,25 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_proxy(self, csv_file):
+        # Proxy log schema versions:
+        # v1-v3: Base fields (row[0]-row[21]) — Timestamp through Policy Identity Type
+        # v4: Adds Blocked Categories (row[22])
+        # v5: Adds Identities, Identity Types, Request Method (row[23]-row[25])
+        # v6: Adds DLP Status, Certificate Errors, File Name, Ruleset ID, Rule ID, Destination List IDs (row[26]-row[31])
+        # v7: Adds DLP File Label (included within DLP Status handling)
+        # v8: Adds Isolate Action, File Action, Warn Status (row[32]-row[34])
+        # v9: Adds Forwarding Method, Producer (row[35]-row[36])
+        # v10: Adds MSP Organization ID, Geo Location, Application IDs, Host Name, Data Center, Egress, Server Name (row[37]-row[43])
+        # v11: Adds Time Based Rule, Security Overridden, Detected Response File Type, Warn Categories, Organization ID, Application Entity Name, Application Entity Category (row[44]-row[50])
+        # v12: Adds Egress IP (row[51])
+        # v13: Adds AI Model Name, AI Supply Chain Categories (row[52]-row[53])
+        # v14: Adds Event Correlation ID (row[54])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             try:
                 if len(row) > 1:
                     if len(row) >= 21:
+                        # v1-v3 base fields
                         event = {
                             'Timestamp': self.format_date(row[0], self.input_date_format, self.output_date_format),
                             'Identities': row[1],
@@ -431,11 +447,12 @@ class UmbrellaClient:
                             'AMP Score': row[20],
                             'Policy Identity Type': row[21]
                         }
+                        # v4
                         try:
                             event['Blocked Categories'] = row[22].split(',')
                         except IndexError:
                             pass
-                         #Version 5 — The same as version 4, but adds three new fields: all Identities, all Identity Types, and Request Method for Proxy logs.
+                        # v5
                         try:
                             event['Identities'] = row[23]
                         except IndexError:
@@ -448,11 +465,11 @@ class UmbrellaClient:
                             event['Request Method'] = row[25]
                         except IndexError:
                             pass
-                        #Version 6 — The same as version 5 with these additional fields to Proxy logs: Certificate Errors, Destination Lists IDs, DLP Status, File Name, Rule ID, and Ruleset ID.
+                        # v6
                         try:
                             event['DLP Status'] = row[26]
                         except IndexError:
-                            pass                     
+                            pass
                         try:
                             event['Certificate Errors'] = row[27]
                         except IndexError:
@@ -473,7 +490,8 @@ class UmbrellaClient:
                             event['Destination List IDs'] = row[31]
                         except IndexError:
                             pass
-                        try:                                         
+                        # v8
+                        try:
                             event['Isolate Action'] = row[32]
                         except IndexError:
                             pass
@@ -484,7 +502,8 @@ class UmbrellaClient:
                         try:
                             event['Warn Status'] = row[34]
                         except IndexError:
-                            pass    
+                            pass
+                        # v9
                         try:
                             event['Forwarding Method'] = row[35]
                         except IndexError:
@@ -493,6 +512,7 @@ class UmbrellaClient:
                             event['Producer'] = row[36]
                         except IndexError:
                             pass
+                        # v10
                         try:
                             event['MSP Organization ID'] = row[37]
                         except IndexError:
@@ -521,6 +541,7 @@ class UmbrellaClient:
                             event['Server Name'] = row[43]
                         except IndexError:
                             pass
+                        # v11
                         try:
                             event['Time Based Rule'] = row[44]
                         except IndexError:
@@ -549,12 +570,12 @@ class UmbrellaClient:
                             event['Application Entity Category'] = row[50]
                         except IndexError:
                             pass
-                        # Version 12 — The same as version 11, but adds the Egress IP field to Proxy logs.
+                        # v12
                         try:
                             event['Egress IP'] = row[51]
                         except IndexError:
                             pass
-                        # Version 13 — The same as version 12, but adds the AI Model Name, AI Supply Chain Categories field to Proxy logs
+                        # v13
                         try:
                             event['AI Model Name'] = row[52]
                         except IndexError:
@@ -563,7 +584,7 @@ class UmbrellaClient:
                             event['AI Supply Chain Categories'] = row[53]
                         except IndexError:
                             pass
-                        # Version 14 — The same as version 13, but adds the Event correlation ID field to Proxy logs
+                        # v14
                         try:
                             event['Event correlation ID'] = row[54]
                         except IndexError:
@@ -589,10 +610,16 @@ class UmbrellaClient:
                 continue
 
     def parse_csv_dns(self, csv_file):
+        # DNS log schema versions:
+        # v1-v2: Base fields (row[0]-row[9]) — Timestamp through Categories
+        # v3: Adds Policy Identity Type, Identity Types (row[10]-row[11])
+        # v4: Adds Blocked Categories (row[12])
+        # v5: Adds Rule ID, Destination Countries, Organization ID (row[13]-row[15])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
                 if len(row) >= 10:
+                    # v1-v2 base fields
                     event = {
                         'Timestamp': self.format_date(row[0], self.input_date_format, self.output_date_format),
                         'Policy Identity': row[1],
@@ -605,6 +632,7 @@ class UmbrellaClient:
                         'Domain': row[8],
                         'Categories': row[9].split(',')
                     }
+                    # v3
                     try:
                         event['Policy Identity Type'] = row[10]
                     except IndexError:
@@ -613,10 +641,12 @@ class UmbrellaClient:
                         event['Identity Types'] = row[11].split(',')
                     except IndexError:
                         pass
+                    # v4
                     try:
                         event['Blocked Categories'] = row[12].split(',')
                     except IndexError:
                         pass
+                    # v5
                     try:
                         event['Rule ID'] = row[13]
                     except IndexError:
@@ -636,6 +666,15 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_cdfw(self, csv_file):
+        # Cloud Firewall log schema versions:
+        # v1-v8: Base fields (row[0]-row[13]) — Timestamp through Verdict
+        # v9: Adds FQDNs, Destination List IDs (row[14]-row[15])
+        # v10: Adds First/Last Packet Timestamp, Packets Sent/Received, Bytes Sent/Received,
+        #      FW Event ID, Destination Country, App ID, Private App ID, Private Flow,
+        #      Posture ID, CASI Category IDs, Traffic Source, Content Category IDs,
+        #      Content Category List IDs, Organization ID (row[16]-row[33])
+        # v12: Adds Egress IP, Egress (row[34]-row[35])
+        # v13: Adds Event Correlation ID (row[36])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -754,6 +793,7 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_ravpn(self, csv_file):
+        # RAVPN log schema: Base fields (row[0]-row[19]), extended fields (row[20]-row[32])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -838,6 +878,7 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_audit(self, csv_file):
+        # Admin Audit log schema: Fields (row[0]-row[8]) — id through after
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -859,6 +900,8 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_ztna(self, csv_file):
+        # ZTNA log schema: Base fields (row[0]-row[29]), extended fields (row[30]-row[56])
+        # Includes posture, MDM, trusted network, and ZTA profile fields
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -1009,6 +1052,7 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_ztaflow(self, csv_file):
+        # ZTA Flow log schema: Base fields (row[0]-row[23]), extended FTD enforcement fields (row[24]-row[26])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -1057,6 +1101,7 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_fileevent(self, csv_file):
+        # File Event log schema: Base fields (row[0]-row[18]), FTD enforcement fields (row[19]-row[21])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -1100,6 +1145,12 @@ class UmbrellaClient:
                 yield event
 
     def parse_csv_intrusion(self, csv_file):
+        # Intrusion (IPS) log schema: Base fields (row[0]-row[16])
+        # Extended fields: operation mode, policy resource ID, direction, firewall rule ID,
+        #   IPS config type, AWS region, Application ID, CASI Category IDs, Data Center,
+        #   Organization ID (row[17]-row[26])
+        # v12: Adds Egress IP, Egress, Enforced By, FTD Enforcement ID/Name,
+        #   Event Correlation ID (row[27]-row[32])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
@@ -1193,6 +1244,14 @@ class UmbrellaClient:
                 yield event
     
     def parse_csv_fw(self, csv_file):
+        # Firewall log schema versions (same structure as Cloud Firewall):
+        # v1-v8: Base fields (row[0]-row[13]) — Timestamp through Verdict
+        # v9: Adds FQDNs, Destination List IDs (row[14]-row[15])
+        # v10: Adds timestamps, packet/byte counts, event ID, destination country,
+        #   App ID, Private App/Flow, Posture, CASI, Traffic Source, Content Categories,
+        #   Organization ID (row[16]-row[33])
+        # v12: Adds Egress IP, Egress (row[34]-row[35])
+        # v13: Adds Event Correlation ID (row[36])
         csv_reader = csv.reader(csv_file.split('\n'), delimiter=',')
         for row in csv_reader:
             if len(row) > 1:
